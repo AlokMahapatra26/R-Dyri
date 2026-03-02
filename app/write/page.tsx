@@ -10,7 +10,7 @@ export default async function WritePage() {
     } = await supabase.auth.getUser()
 
     if (!user) {
-        redirect('/login')
+        redirect('/register')
     }
 
     const { data: partnerships } = await supabase

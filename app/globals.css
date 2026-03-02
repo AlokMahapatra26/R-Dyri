@@ -123,3 +123,49 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-neutral-300 dark:bg-neutral-700;
 }
+
+/* --- Diary Aesthetics --- */
+.diary-paper {
+  background-color: #faf6f0;
+  background-image: repeating-linear-gradient(transparent, transparent 39px, rgba(160, 130, 100, 0.15) 40px);
+  background-attachment: local;
+}
+
+.dark .diary-paper {
+  background-color: #1a1814;
+  background-image: repeating-linear-gradient(transparent, transparent 39px, rgba(200, 170, 130, 0.06) 40px);
+}
+
+.prose p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: 40px;
+}
+
+/* Stamp image styling */
+.prose img {
+  background: radial-gradient(circle, transparent 3px, #f0e8dc 3px) 0 0 / 12px 12px !important;
+  padding: 12px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: block !important;
+  margin: 24px auto !important;
+  max-width: 250px !important;
+  width: 100% !important;
+  height: auto !important;
+  object-fit: cover !important;
+}
+
+.dark .prose img {
+  background: radial-gradient(circle, transparent 3px, #2a2520 3px) 0 0 / 12px 12px !important;
+}
+
+/* Tilted stuck-on effect — odd/even on img directly */
+.prose img:nth-of-type(odd) {
+  transform: rotate(-5deg);
+}
+
+.prose img:nth-of-type(even) {
+  transform: rotate(4deg);
+}

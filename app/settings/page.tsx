@@ -1,6 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { LogOut } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import ProfileForm from './ProfileForm'
 import DeleteChatButton from './DeleteChatButton'
 import { deleteAllChatMessages } from './actions'
@@ -8,33 +12,65 @@ import { ThemeToggle } from './ThemeToggle'
 import ExportDiaryButton from './ExportDiaryButton'
 import { FontPicker } from './FontPicker'
 
-export default async function SettingsPage() {
-    const supabase = await createClient()
+export default function SettingsPage() {
+    const router = useRouter()
+    const supabase = createClient()
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    const fetchSettingsData = async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not logged in')
 
-    if (!user) {
-        redirect('/login')
+        // Fetch profile data
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+        // Fetch active partnership
+        const { data: partnerships } = await supabase
+            .from('partnerships')
+            .select('id')
+            .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+            .eq('status', 'accepted')
+            .limit(1)
+
+        return {
+            user,
+            profile,
+            activePartnership: partnerships?.[0] || null
+        }
     }
 
-    // Fetch profile data
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+    const { data, error } = useSWR('settings_data', fetchSettingsData, {
+        revalidateOnFocus: false,
+    })
 
-    // Fetch active partnership
-    const { data: partnerships } = await supabase
-        .from('partnerships')
-        .select('id')
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .eq('status', 'accepted')
-        .limit(1)
+    useEffect(() => {
+        if (error) {
+            router.push('/register')
+        }
+    }, [error, router])
 
-    const activePartnership = partnerships?.[0]
+    const handleLogout = async () => {
+        await supabase.auth.signOut()
+        router.push('/register')
+    }
+
+    if (!data && !error) {
+        return (
+            <div className="flex-1 w-full max-w-xl mx-auto flex flex-col h-[100dvh]">
+                <header className="w-full py-3 px-6 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
+                    <h1 className="font-serif text-lg tracking-tight text-foreground opacity-50">Settings</h1>
+                </header>
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin opacity-50" />
+                </div>
+            </div>
+        )
+    }
+
+    if (!data) return null
 
     return (
         <div className="flex-1 w-full max-w-xl mx-auto flex flex-col h-[100dvh]">
@@ -45,7 +81,7 @@ export default async function SettingsPage() {
                 <div className="flex flex-col gap-4 p-4">
 
                     {/* Profile Form (Avatar, Name, Age, Gender) */}
-                    <ProfileForm initialData={profile} email={user.email} />
+                    <ProfileForm initialData={data.profile} email={data.user.email} />
 
                     {/* Setting Links */}
                     <div className="flex flex-col gap-2">
@@ -56,23 +92,18 @@ export default async function SettingsPage() {
 
                     {/* Danger Zone */}
                     <div className="mt-2 flex gap-2">
-                        {activePartnership && (
+                        {data.activePartnership && (
                             <div className="flex-1">
                                 <DeleteChatButton action={deleteAllChatMessages} />
                             </div>
                         )}
-                        <form className="flex-1" action={async () => {
-                            'use server'
-                            const { createClient } = await import('@/lib/supabase/server')
-                            const supabase = await createClient()
-                            await supabase.auth.signOut()
-                            redirect('/login')
-                        }}>
-                            <button className="h-9 w-full flex items-center justify-center gap-2 bg-transparent border border-border text-muted-foreground rounded-xl text-[13px] font-medium transition-all duration-300 ease-out hover:bg-muted hover:text-foreground hover:scale-[1.02] active:scale-[0.98]">
-                                <LogOut size={16} />
-                                Log Out
-                            </button>
-                        </form>
+                        <button
+                            onClick={handleLogout}
+                            className="flex-1 h-9 flex items-center justify-center gap-2 bg-transparent border border-border text-muted-foreground rounded-xl text-[13px] font-medium transition-all duration-300 ease-out hover:bg-muted hover:text-foreground hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                            <LogOut size={16} />
+                            Log Out
+                        </button>
                     </div>
 
                 </div>

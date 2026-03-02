@@ -10,7 +10,7 @@ export default async function ChatPage() {
     } = await supabase.auth.getUser()
 
     if (!user) {
-        redirect('/login')
+        redirect('/register')
     }
 
     // Get active partnership

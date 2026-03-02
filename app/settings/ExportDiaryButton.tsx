@@ -5,6 +5,8 @@ import { Download, Loader2 } from 'lucide-react'
 import JSZip from 'jszip'
 import { createClient } from '@/lib/supabase/client'
 
+const stripHtml = (html: string) => html ? html.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : ''
+
 export default function ExportDiaryButton() {
     const [exporting, setExporting] = useState(false)
     const [progress, setProgress] = useState('')
@@ -78,7 +80,7 @@ export default function ExportDiaryButton() {
                     '',
                     '---',
                     '',
-                    entry.content || '',
+                    stripHtml(entry.content) || '',
                 ].filter(Boolean).join('\n')
 
                 entryFolder.file('entry.txt', entryText)

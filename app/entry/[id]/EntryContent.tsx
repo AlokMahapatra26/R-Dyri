@@ -18,11 +18,10 @@ export function EntryContent({ title, content, fallbackTitle }: {
                 {title || fallbackTitle}
             </h1>
             <div
-                className="text-foreground/90 leading-relaxed whitespace-pre-wrap text-[1.15rem] md:text-[1.3rem] mt-8"
-                style={{ fontFamily, lineHeight: '1.8' }}
-            >
-                {content}
-            </div>
+                className="text-foreground/90 whitespace-pre-wrap text-[1.15rem] md:text-[1.3rem] mt-8 prose prose-lg dark:prose-invert diary-paper max-w-none"
+                style={{ fontFamily, lineHeight: '40px' }}
+                dangerouslySetInnerHTML={{ __html: content }}
+            />
         </>
     )
 }

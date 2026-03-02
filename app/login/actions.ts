@@ -27,15 +27,31 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
     const supabase = await createClient()
 
-    const data = {
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
-    }
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+    const name = formData.get('name') as string
 
-    const { error } = await supabase.auth.signUp(data)
+    const { data: authData, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+            data: {
+                name // Appends to raw_user_meta_data for backup and triggers
+            }
+        }
+    })
 
     if (error) {
         redirect('/register?message=' + encodeURIComponent(error.message))
+    }
+
+    // Force update the profile name immediately in case the trigger takes a moment
+    // or doesn't pull the name correctly.
+    if (authData?.user && name) {
+        await supabase
+            .from('profiles')
+            .update({ name })
+            .eq('id', authData.user.id)
     }
 
     revalidatePath('/', 'layout')
@@ -45,5 +61,5 @@ export async function signup(formData: FormData) {
 export async function logout() {
     const supabase = await createClient()
     await supabase.auth.signOut()
-    redirect('/login')
+    redirect('/register')
 }
