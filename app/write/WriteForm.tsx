@@ -41,13 +41,27 @@ export default function WriteForm({ initialData }: { initialData?: DiaryEntry | 
             </header>
 
             <form
-                action={async (formData) => {
+                onSubmit={async (e) => {
+                    e.preventDefault()
+                    if (isSaving || isUploading) return
+
                     setError(null)
                     setIsSaving(true)
+
+                    const formData = new FormData(e.currentTarget)
+                    // Ensure our hidden fields are included in FormData
+                    formData.set('photos', JSON.stringify(photos))
+                    formData.set('content', htmlContent)
+                    if (initialData?.id) {
+                        formData.set('entryId', initialData.id)
+                    }
+
                     try {
                         await submitEntry(formData)
-                    } catch (e: any) {
-                        setError(e.message || "An error occurred while saving.")
+                        // Note: submitEntry redirects on success, so we leave isSaving as true
+                        // to keep the button in a loading state while the browser navigates.
+                    } catch (err: any) {
+                        setError(err.message || "An error occurred while saving.")
                         setIsSaving(false)
                     }
                 }}
