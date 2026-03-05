@@ -70,6 +70,8 @@ export default function DiaryFeed({
             .select('*, reactions(emoji, user_id)')
             .order('logical_date', { ascending: false })
             .order('created_at', { ascending: false })
+
+        console.log("Vercel Fetched Diaries Data:", data)
         setEntries(data as DiaryEntry[] | null)
         setIsLoading(false)
     }
