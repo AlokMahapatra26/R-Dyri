@@ -6,8 +6,6 @@ import useSWR from 'swr'
 import { LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ProfileForm from './ProfileForm'
-import DeleteChatButton from './DeleteChatButton'
-import { deleteAllChatMessages } from './actions'
 import { ThemeToggle } from './ThemeToggle'
 import ExportDiaryButton from './ExportDiaryButton'
 import { FontPicker } from './FontPicker'
@@ -92,11 +90,6 @@ export default function SettingsPage() {
 
                     {/* Danger Zone */}
                     <div className="mt-2 flex gap-2">
-                        {data.activePartnership && (
-                            <div className="flex-1">
-                                <DeleteChatButton action={deleteAllChatMessages} />
-                            </div>
-                        )}
                         <button
                             onClick={handleLogout}
                             className="flex-1 h-9 flex items-center justify-center gap-2 bg-transparent border border-border text-muted-foreground rounded-xl text-[13px] font-medium transition-all duration-300 ease-out hover:bg-muted hover:text-foreground hover:scale-[1.02] active:scale-[0.98]"

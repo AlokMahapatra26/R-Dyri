@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { updateProfile } from './actions'
-import { Loader2, Camera, User } from 'lucide-react'
+import { Loader2, Camera, User, Check } from 'lucide-react'
 import Image from 'next/image'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,7 @@ export default function ProfileForm({
     email: string | undefined
 }) {
     const [saving, setSaving] = useState(false)
+    const [saved, setSaved] = useState(false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.avatar_url || null)
     const [avatarBase64, setAvatarBase64] = useState<string>('')
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -55,6 +56,8 @@ export default function ProfileForm({
                 formData.append('avatarBase64', avatarBase64)
             }
             await updateProfile(formData)
+            setSaved(true)
+            setTimeout(() => setSaved(false), 2000)
         } catch (error) {
             console.error(error)
             alert('Failed to save profile.')
@@ -143,13 +146,18 @@ export default function ProfileForm({
 
             <Button
                 type="submit"
-                disabled={saving}
-                className="w-full mt-6 rounded-xl h-10 text-[14px] transition-colors disabled:opacity-50"
+                disabled={saving || saved}
+                className={`w-full mt-6 rounded-xl h-10 text-[14px] transition-colors disabled:opacity-50 ${saved ? 'bg-green-600/90 hover:bg-green-600/90 text-white border-none' : ''}`}
             >
                 {saving ? (
                     <>
                         <Loader2 className="animate-spin mr-2" size={18} />
                         Saving...
+                    </>
+                ) : saved ? (
+                    <>
+                        <Check className="mr-2" size={18} />
+                        Saved
                     </>
                 ) : (
                     'Save Profile'
