@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { Calendar, ChevronDown, ImageIcon } from 'lucide-react'
+import { Calendar, ChevronDown } from 'lucide-react'
 import { format, getWeekOfMonth } from 'date-fns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from '@/lib/supabase/client'
@@ -350,8 +350,8 @@ export default function DiaryFeed({
                                                                         </p>
                                                                     </div>
 
-                                                                    {/* Footer: Title and specific meta */}
-                                                                    <div className="flex items-center justify-between gap-2 min-w-0 mt-3 pt-3 border-t border-border/60">
+                                                                    {/* Footer: Title */}
+                                                                    <div className="flex items-center gap-2 min-w-0 mt-3 pt-3 border-t border-border/60">
                                                                         {entry.title ? (
                                                                             <span className="font-serif text-[12px] md:text-[14px] text-foreground truncate font-medium">
                                                                                 {entry.title}
@@ -362,12 +362,6 @@ export default function DiaryFeed({
                                                                             </span>
                                                                         )}
 
-                                                                        {entry.photos && entry.photos.length > 0 && (
-                                                                            <div className="flex items-center gap-1 text-[9px] md:text-[10px] text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded border border-border">
-                                                                                <ImageIcon size={10} />
-                                                                                {entry.photos.length}
-                                                                            </div>
-                                                                        )}
                                                                     </div>
                                                                 </article>
                                                             </Link>

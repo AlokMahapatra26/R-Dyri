@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { submitEntry } from './actions'
-import { ChevronLeft, Loader2, AlertCircle, ImagePlus } from 'lucide-react'
+import { ChevronLeft, Loader2, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useDiaryFont } from '@/lib/diary-font'
-import { DiaryEditor, DiaryEditorRef } from '@/app/components/DiaryEditor'
+import { DiaryEditor } from '@/app/components/DiaryEditor'
 
 type DiaryEntry = {
     id: string
@@ -18,16 +18,9 @@ type DiaryEntry = {
 
 export default function WriteForm({ initialData }: { initialData?: DiaryEntry | null }) {
     const [htmlContent, setHtmlContent] = useState(initialData?.content || '')
-    const [photos, setPhotos] = useState<string[]>(initialData?.photos || [])
     const [isSaving, setIsSaving] = useState(false)
-    const [isUploading, setIsUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const { fontFamily } = useDiaryFont()
-    const editorRef = useRef<DiaryEditorRef>(null)
-
-    const handlePhotoAdded = (url: string) => {
-        setPhotos(prev => [...prev, url])
-    }
 
     return (
         <div className="flex-1 w-full flex flex-col items-center max-w-3xl mx-auto px-6 md:px-8 relative font-sans h-[100dvh] diary-paper">
@@ -43,14 +36,13 @@ export default function WriteForm({ initialData }: { initialData?: DiaryEntry | 
             <form
                 onSubmit={async (e) => {
                     e.preventDefault()
-                    if (isSaving || isUploading) return
+                    if (isSaving) return
 
                     setError(null)
                     setIsSaving(true)
 
                     const formData = new FormData(e.currentTarget)
-                    // Ensure our hidden fields are included in FormData
-                    formData.set('photos', JSON.stringify(photos))
+                    formData.set('photos', JSON.stringify([]))
                     formData.set('content', htmlContent)
                     if (initialData?.id) {
                         formData.set('entryId', initialData.id)
@@ -71,7 +63,7 @@ export default function WriteForm({ initialData }: { initialData?: DiaryEntry | 
                 <input
                     type="hidden"
                     name="photos"
-                    value={JSON.stringify(photos)}
+                    value={JSON.stringify([])}
                 />
                 <input
                     type="hidden"
@@ -93,11 +85,8 @@ export default function WriteForm({ initialData }: { initialData?: DiaryEntry | 
                 />
 
                 <DiaryEditor
-                    ref={editorRef}
                     initialContent={htmlContent}
                     onChange={setHtmlContent}
-                    onPhotoAdded={handlePhotoAdded}
-                    onUploadingChange={setIsUploading}
                     fontFamily={fontFamily}
                 />
 
@@ -109,26 +98,10 @@ export default function WriteForm({ initialData }: { initialData?: DiaryEntry | 
                 )}
 
                 {/* Unified bottom toolbar */}
-                <div className="sticky bottom-0 pb-6 pt-4 bg-gradient-to-t from-[#faf6f0] via-[#faf6f0]/95 to-transparent dark:from-[#1a1814] dark:via-[#1a1814]/95 flex items-center justify-between gap-3 z-20">
-                    <button
-                        type="button"
-                        onClick={() => editorRef.current?.triggerImageUpload()}
-                        disabled={isUploading}
-                        className="flex items-center gap-2 bg-card/80 backdrop-blur-sm border border-border text-foreground px-4 py-2.5 rounded-full shadow-sm hover:bg-muted transition-all duration-300 text-sm font-medium cursor-pointer active:scale-95"
-                    >
-                        {isUploading ? (
-                            <Loader2 size={16} className="animate-spin text-primary" />
-                        ) : (
-                            <ImagePlus size={16} className="text-primary" />
-                        )}
-                        <span className="font-sans text-xs tracking-wide uppercase">
-                            {isUploading ? 'Uploading...' : 'Add Photo'}
-                        </span>
-                    </button>
-
+                <div className="sticky bottom-0 pb-6 pt-4 bg-gradient-to-t from-[#faf6f0] via-[#faf6f0]/95 to-transparent dark:from-[#1a1814] dark:via-[#1a1814]/95 flex items-center justify-end gap-3 z-20">
                     <Button
                         type="submit"
-                        disabled={isSaving || isUploading || htmlContent.length === 0}
+                        disabled={isSaving || htmlContent.length === 0}
                         className="rounded-full px-8 py-6 font-medium shadow-sm transition-all duration-300 ease-out hover:scale-105 hover:shadow-md active:scale-95 disabled:hover:scale-100 disabled:opacity-50"
                     >
                         {isSaving ? (
