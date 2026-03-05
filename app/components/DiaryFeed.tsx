@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { Calendar, ChevronDown, ImageIcon } from 'lucide-react'
 import { format, getWeekOfMonth } from 'date-fns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import useSWR from 'swr'
 import { createClient } from '@/lib/supabase/client'
 
 type DiaryEntry = {
@@ -60,20 +59,24 @@ export default function DiaryFeed({
     partnerAvatarUrl: string | null
     currentUserAvatarUrl: string | null
 }) {
-    // SWR fetcher to get fresh data on client-side
-    const fetcher = async () => {
+    const [entries, setEntries] = useState<DiaryEntry[] | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+
+    const fetchEntries = async () => {
+        setIsLoading(true)
         const supabase = createClient()
         const { data } = await supabase
             .from('diaries')
             .select('*, reactions(emoji, user_id)')
             .order('logical_date', { ascending: false })
             .order('created_at', { ascending: false })
-        return data as DiaryEntry[] | null
+        setEntries(data as DiaryEntry[] | null)
+        setIsLoading(false)
     }
 
-    const { data: cachedEntries, isLoading } = useSWR('diaries', fetcher, {
-        revalidateOnFocus: true
-    })
+    useEffect(() => {
+        fetchEntries()
+    }, [])
 
     const [activeTab, setActiveTab] = useState<Tab>('together')
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -90,15 +93,15 @@ export default function DiaryFeed({
     const availableYears = useMemo(() => {
         const years = new Set<string>()
         years.add(format(new Date(), 'yyyy'))
-        if (cachedEntries) {
-            cachedEntries.forEach(e => years.add(format(new Date(e.logical_date || e.created_at), 'yyyy')))
+        if (entries) {
+            entries.forEach(e => years.add(format(new Date(e.logical_date || e.created_at), 'yyyy')))
         }
         return Array.from(years).sort((a, b) => b.localeCompare(a))
-    }, [cachedEntries])
+    }, [entries])
 
     // Filter + sort
     const sortedEntries = useMemo(() => {
-        const filtered = cachedEntries?.filter((entry) => {
+        const filtered = entries?.filter((entry) => {
             // Tab filter
             if (activeTab === 'mine' && entry.user_id !== currentUserId) return false
             if (activeTab === 'partner' && entry.user_id === currentUserId) return false
@@ -116,7 +119,7 @@ export default function DiaryFeed({
         return [...filtered].sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
-    }, [cachedEntries, activeTab, currentUserId, selectedYear, selectedMonth, selectedWeek])
+    }, [entries, activeTab, currentUserId, selectedYear, selectedMonth, selectedWeek])
 
     // Paginate
     const visibleEntries = sortedEntries.slice(0, visibleCount)
@@ -139,9 +142,9 @@ export default function DiaryFeed({
     }, [visibleEntries])
 
     const tabs: { key: Tab; label: string; count: number }[] = [
-        { key: 'together', label: 'All', count: cachedEntries?.length || 0 },
-        { key: 'mine', label: 'Mine', count: cachedEntries?.filter(e => e.user_id === currentUserId).length || 0 },
-        { key: 'partner', label: partnerName, count: cachedEntries?.filter(e => e.user_id !== currentUserId).length || 0 },
+        { key: 'together', label: 'All', count: entries?.length || 0 },
+        { key: 'mine', label: 'Mine', count: entries?.filter(e => e.user_id === currentUserId).length || 0 },
+        { key: 'partner', label: partnerName, count: entries?.filter(e => e.user_id !== currentUserId).length || 0 },
     ]
 
     return (
@@ -214,7 +217,7 @@ export default function DiaryFeed({
 
             {/* Entries */}
             {/* Render Feed */}
-            {isLoading && !cachedEntries ? (
+            {isLoading && !entries ? (
                 <div className="flex justify-center items-center py-20 opacity-50">
                     <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                 </div>

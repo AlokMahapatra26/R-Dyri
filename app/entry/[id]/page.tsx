@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, use } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import useSWR from 'swr'
 import { ChevronLeft, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
@@ -14,44 +13,48 @@ import { ReactionBar } from './ReactionBar'
 export default function EntryPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params)
     const router = useRouter()
-    const supabase = createClient()
-
-    const fetchEntryData = async () => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not logged in')
-
-        const { data: entry, error: entryError } = await supabase
-            .from('diaries')
-            .select('*')
-            .eq('id', id)
-            .single()
-
-        if (entryError || !entry) throw new Error('Entry not found')
-
-        const { data: reactions } = await supabase
-            .from('reactions')
-            .select('*')
-            .eq('entry_id', id)
-
-        return {
-            user,
-            entry,
-            reactions: reactions || []
-        }
-    }
-
-    const { data, error, isLoading } = useSWR(`entry_${id}`, fetchEntryData, {
-        revalidateOnFocus: false
-    })
+    const [data, setData] = useState<any>(null)
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        if (error) {
-            if (error.message === 'Not logged in') router.push('/register')
-            else router.push('/')
-        }
-    }, [error, router])
+        const fetchEntryData = async () => {
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                router.push('/register')
+                return
+            }
 
-    if (isLoading || (!data && !error)) {
+            const { data: entry, error: entryError } = await supabase
+                .from('diaries')
+                .select('*')
+                .eq('id', id)
+                .single()
+
+            if (entryError || !entry) {
+                router.push('/')
+                return
+            }
+
+            const { data: reactions } = await supabase
+                .from('reactions')
+                .select('*')
+                .eq('entry_id', id)
+
+            setData({
+                user,
+                entry,
+                reactions: reactions || []
+            })
+            setIsLoading(false)
+        }
+
+        fetchEntryData().catch(() => {
+            router.push('/')
+        })
+    }, [id, router])
+
+    if (isLoading) {
         return (
             <div className="flex-1 w-full flex flex-col items-center justify-center min-h-[50vh]">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin opacity-50" />

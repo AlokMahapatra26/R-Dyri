@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import useSWR from 'swr'
 import { LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ProfileForm from './ProfileForm'
@@ -12,50 +11,53 @@ import { FontPicker } from './FontPicker'
 
 export default function SettingsPage() {
     const router = useRouter()
-    const supabase = createClient()
-
-    const fetchSettingsData = async () => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not logged in')
-
-        // Fetch profile data
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single()
-
-        // Fetch active partnership
-        const { data: partnerships } = await supabase
-            .from('partnerships')
-            .select('id')
-            .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-            .eq('status', 'accepted')
-            .limit(1)
-
-        return {
-            user,
-            profile,
-            activePartnership: partnerships?.[0] || null
-        }
-    }
-
-    const { data, error } = useSWR('settings_data', fetchSettingsData, {
-        revalidateOnFocus: false,
-    })
+    const [data, setData] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        if (error) {
-            router.push('/register')
+        const fetchSettingsData = async () => {
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                router.push('/register')
+                return
+            }
+
+            // Fetch profile data
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single()
+
+            // Fetch active partnership
+            const { data: partnerships } = await supabase
+                .from('partnerships')
+                .select('id')
+                .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+                .eq('status', 'accepted')
+                .limit(1)
+
+            setData({
+                user,
+                profile,
+                activePartnership: partnerships?.[0] || null
+            })
+            setLoading(false)
         }
-    }, [error, router])
+
+        fetchSettingsData().catch(() => {
+            router.push('/register')
+        })
+    }, [router])
 
     const handleLogout = async () => {
+        const supabase = createClient()
         await supabase.auth.signOut()
         router.push('/register')
     }
 
-    if (!data && !error) {
+    if (loading) {
         return (
             <div className="flex-1 w-full max-w-xl mx-auto flex flex-col h-[100dvh]">
                 <header className="w-full py-3 px-6 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-10 shrink-0">

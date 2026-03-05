@@ -2,21 +2,13 @@
 
 import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
-import { useSWRConfig } from 'swr'
 
 export default function RefreshButton() {
     const [isRefreshing, setIsRefreshing] = useState(false)
-    const { mutate } = useSWRConfig()
 
-    const handleRefresh = async () => {
+    const handleRefresh = () => {
         setIsRefreshing(true)
-        // Globally re-fetch the 'diaries' SWR key
-        await mutate('diaries')
-
-        // Short delay to ensure the spin animation plays long enough to be visible
-        setTimeout(() => {
-            setIsRefreshing(false)
-        }, 600)
+        window.location.reload()
     }
 
     return (
