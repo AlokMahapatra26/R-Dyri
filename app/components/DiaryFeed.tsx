@@ -81,9 +81,9 @@ export default function DiaryFeed({
     const [activeTab, setActiveTab] = useState<Tab>('together')
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-    const [selectedYear, setSelectedYear] = useState<string>(() => format(new Date(), 'yyyy'))
-    const [selectedMonth, setSelectedMonth] = useState<string>(() => format(new Date(), 'M'))
-    const [selectedWeek, setSelectedWeek] = useState<string>(() => getWeekOfMonth(new Date()).toString())
+    const [selectedYear, setSelectedYear] = useState<string>('all')
+    const [selectedMonth, setSelectedMonth] = useState<string>('all')
+    const [selectedWeek, setSelectedWeek] = useState<string>('all')
 
     // Reset pagination when any filter changes
     useEffect(() => {
