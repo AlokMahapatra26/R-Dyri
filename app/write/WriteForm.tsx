@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { submitEntry } from './actions'
 import { ChevronLeft, Loader2, AlertCircle, ImagePlus } from 'lucide-react'
 import Link from 'next/link'
+import { mutate } from 'swr'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useDiaryFont } from '@/lib/diary-font'
@@ -58,6 +59,7 @@ export default function WriteForm({ initialData }: { initialData?: DiaryEntry | 
 
                     try {
                         await submitEntry(formData)
+                        await mutate('diaries')
                         // Note: submitEntry redirects on success, so we leave isSaving as true
                         // to keep the button in a loading state while the browser navigates.
                     } catch (err: any) {
