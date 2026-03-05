@@ -6,8 +6,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { DiaryFontProvider } from "@/lib/diary-font";
 import { ServiceWorkerRegistration } from "./components/ServiceWorkerRegistration";
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
